@@ -1,5 +1,6 @@
 package com.example.reactor;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -8,6 +9,7 @@ import org.junit.Test;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class MyExampleTest {
 
@@ -103,5 +105,49 @@ public class MyExampleTest {
 			return state;
 		}, (state) -> System.out.println("state: " + state));
 		flux.subscribe();
+	}
+
+	@Test
+	public void example10() throws InterruptedException {
+		Flux<String> flux = Flux.interval(Duration.ofMillis(250)).map(input -> {
+			if (input < 3) {
+				return "tick " + input;
+			}
+			throw new RuntimeException("boom");
+		}).onErrorReturn("Uh oh");
+
+		flux.subscribe(System.out::println);
+		Thread.sleep(2100);
+	}
+
+	@Test
+	public void example11() throws InterruptedException {
+		Flux.interval(Duration.ofMillis(250)).map(input -> {
+			if (input < 3) {
+				return "tick " + input;
+			}
+			throw new RuntimeException("boom");
+		})
+		.elapsed()
+		.retry(1)
+		.subscribe(System.out::println, error -> System.out.println(error));
+
+		Thread.sleep(2100);
+	}
+
+	@Test
+	public void testAppendBoomError() {
+		Flux<String> source = Flux.just("foo", "bar");
+
+		StepVerifier
+			.create(appendBoomError(source))
+			.expectNext("foo")
+			.expectNext("bar")
+			.expectErrorMessage("boom")
+			.verify();
+	}
+
+	public <T> Flux<T> appendBoomError(Flux<T> source) {
+		return source.concatWith(Mono.error(new IllegalArgumentException("boom")));
 	}
 }
