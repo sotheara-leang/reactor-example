@@ -1,0 +1,40 @@
+buildscript {
+	repositories {
+    	maven {
+    		url "https://plugins.gradle.org/m2/"
+    	}
+  	}
+  	dependencies {
+   		classpath "io.spring.gradle:dependency-management-plugin:1.0.1.RELEASE"
+  	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'io.spring.dependency-management'
+
+
+ext {
+	jdkVersion = 1.8
+	logbackExtSpringVersion = '0.1.4'
+}
+
+sourceCompatibility = jdkVersion
+targetCompatibility = jdkVersion
+
+repositories {
+     mavenCentral()
+}
+
+dependencyManagement {
+     imports {
+          mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
+     }
+}
+
+dependencies {
+	compile 'io.projectreactor:reactor-core'
+	
+	testCompile 'junit:junit:4.12'
+	testCompile  'io.projectreactor:reactor-test'
+}
